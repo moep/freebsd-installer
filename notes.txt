@@ -1,0 +1,116 @@
+https://forums.freebsd.org/threads/installing-freebsd-manually-no-installer.63201/
+https://docs.oracle.com/cd/E19253-01/819-5461/gazss/index.html
+
+== Create bootable USB stick
+diskutil list
+sudo diskutil unmountDisk /dev/diskX
+
+xz --decompress --to-stdout freebsd.img.xz | dd of=/dev/diskX bs=1m status=progress
+
+== Before getting started
+csh
+
+== Network Setup
+ifconfig ue0 up
+dhclient ue0
+
+== OPTIONAL: sshd
+mkdir /tmp/etc
+mount_unionfs /tmp/etc /etc
+echo 'PermitRootLogin yes' >> /etc/ssh/ssh_config
+passwd root
+service sshd onestart
+
+== Partition Layout
+https://rderik.com/blog/notes-on-freebsd-ufs-partition-schema/
+
+
+gpart destroy ada0
+gpart create -s GPT ada0
+gpart add -t freebsd-boot  -s 5M -l boot ada0
+#gpart add -t freebsd-swap -s 16G ada0
+gpart add -t freebsd-zfs -l system -s 300G ada0
+
+
+# basic zfs setup
+mkdir /tmp/zfs
+#zfs import
+zpool create -m  / -R /tmp/zfs zroot ada0p2
+zpool set bootfs=zroot zroot
+zfs create -V 8G zroot/swap
+zfs set org.freebsd:swap=on zroot/swap
+
+# optional zfs setup
+# see https://wiki.freebsd.org/RootOnZFS/GPTZFSBoot
+mkdir /tmp/zfs/usr
+zfs create zroot/home
+
+zfs create -o mountpoint=/usr/ports -o compression=on -o setuid=off zroot/ports
+zfs create -o compression=off -o exec=off -o setuid=off zroot/ports/distfiles
+zfs create -o compression=off -o exec=off -o setuid=off zroot/ports/packages
+
+zfs create -o mountpoint=/usr/local zroot/local
+zfs create -o mountpoint=/usr/src -o compression=on zroot/src
+zfs create -o mountpoint=/usr/doc -o compression=on zroot/doc
+
+zfs create zroot/var
+zfs create -o exec=off -o setuid=off zroot/var/db
+zfs create -o compression=on -o exec=on -o setuid=off zroot/var/db/pkg
+zfs create -o compression=on -o exec=on -o setuid=on zroot/var/db/mail
+zfs create -o compression=on -o exec=on -o setuid=on zroot/var/db/log
+zfs create -o exec=off -o setuid=off zroot/var/run
+zfs create -o exec=off -o setuid=off zroot/var/tmp
+zfs create -o exec=off -o setuid=off zroot/tmp
+chmod 1777 /tmp/zfs/tmp /tmp/zfs/var/tmp
+
+zfs create zroot/opt
+
+== Installing the Base System
+
+cd /tmp/zfs
+
+ftp -a http://ftp2.de.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/base.txz
+ftp -a http://ftp2.de.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/kernel.txz
+ftp -a http://ftp2.de.freebsd.org/pub/FreeBSD/releases/amd64/13.0-RELEASE/lib32.txz
+
+tar xf base.txz
+tar xf kernel.txz
+tar xf lib32.txz
+
+# Make it bootable
+#gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 1 ada0
+gpart bootcode -p /boot/boot1.efi -i 1 ada0
+
+echo 'zfs_load="YES"' > /tmp/zfs/boot/loader.conf
+echo 'vfs.root.mountfrom="zfs:zroot"' >> /tmp/zfs/boot/loader.conf
+echo 'zfs_enable="YES"' > /tmp/zfs/etc/rc.conf
+
+mkdir /tmp/efi
+mount -t msdosfs /dev/nvd1p1 /tmp/efi 
+mkdir -p /tmp/efi/EFI/FreeBSD
+cp /tmp/zfs/boot/loader.efi /tmp/efi/EFI/FreeBSD/
+
+efibootmgr --create --activate --label FreeBSD --loader nvd1p1:/EFI/FreeBSD/loader.efi
+
+zpool export zroot
+init 6
+
+== Essential Packages
+
+== Misc
+# Mounting from recovery
+mkdir /mnt/zfs
+zpool import -R /tmp/zfs zroot
+# zpool labelclear -f /dev/ada0 helps when there are "multiple" pools
+
+Archiv nach 192.168.0.235 kopieren
+
+# Untested: Don't restart on kernel panic
+https://forums.freebsd.org/threads/prevent-reboot-on-kernel-panic.57975/
+unload
+load /boot/kernel/kernel
+load /boot/kernel/opensolaris.ko
+load /boot/kernel/zfs.ko
+sysctl kern.panic_reboot_wait_time=-1
+set currdev="disk1p2"
+set vfs.root.mountfrom="zfs:zroot"

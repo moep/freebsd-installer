@@ -1,0 +1,80 @@
+A collection of scripts to automate my personal FreeBSD 13 installation.
+You will be better of using the handbook and bsdinstall. 
+USE AT YOUR OWN RISK OR YOU WILL probably LOSE DATA!
+
+Most parts are copied from here: 
+https://forums.freebsd.org/threads/installing-freebsd-manually-no-installer.63201/
+
+1. Prerequisites
+================
+
+The installation requires a device with an SSL client.
+The target machine requires a dedicated hard drive. (By limiting the root partition size you can leave space for other OSs.)
+Clone this project and cd into it.
+Download FreeBSD-13.0-RELEASE-amd64-memstick.img.xz and write it to a USB stick:
+
+  dd if=FreeBSD-13.0-RELEASE-amd64-memstick.img.xz of=/dev/yourUsbStick bs=1m
+
+2. Preparing the Target Machine
+===============================
+Boot from USB and close the TUI installer. Exec csh to get a more comfortable shell.
+
+$ csh
+
+Use gpart to read / verfiy your disk identifiers.
+
+$ gpart show
+
+Edit install.sh's parameters to suit your needs.
+Start SSHD on the target machine.
+
+$ mkdir /tmp/etc
+$ mount_unionfs /tmp/etc /etc
+
+# Create a network connection.
+$ dhclient ue0
+# or
+$ ifconfig ue0 192.168.0.6/24 up
+$ route add default 192.168.0.1
+$ echo "nameserver 192.168.0.1" > /etc/resolv.conf
+
+$ vi /etc/ssh/sshd_config # PermitRootLogin=yes
+$ passwd
+$ service sshd onestart
+
+Copy the installation scripts and files to the target machine.
+
+$ scp *.sh root@target:/tmp
+$ scp conf/* root@target:/tmp
+
+3. Installation
+===============
+Review and change the installation script if needed.
+
+$ vi /tmp/install.sh
+Execute install.sh on the target machine and follow the instructions.
+
+$ sh /tmp/install.sh
+
+In case something goes wrong and retry fails because of "multiple zfs pools" try the following:
+
+$ zpool labelclear -f /dev/yourTargedDevice
+
+The script will ask if you want to add an entry to your EFI NVRAM. You should choose yes here.
+This will not install a boot manager though. 
+
+Optional: Install rEFInd
+  See: https://www.rodsbooks.com/refind/installing.html - Installing rEFInd Manually
+
+4. Post Installation
+====================
+
+Start you newly installed OS.
+Run post-install.sh.
+
+$ sh /root/post-install.sh
+
+Cleanup.
+
+$ rm /root/functions.sh 
+$ rm /root/post-install.sh 

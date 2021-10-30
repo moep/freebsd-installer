@@ -1,0 +1,7 @@
+*.xz
+*.img
+*.tar
+*.tgz
+loader.conf
+rc.conf
+*/
