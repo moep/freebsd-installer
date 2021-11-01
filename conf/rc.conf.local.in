@@ -1,0 +1,14 @@
+hostname=\\"${HOST_NAME}\\"
+
+
+\\# alternatively: ifconfig_${NETWORK_INTERFACE}=\\"DHCP\\"
+ifconfig_${NETWORK_INTERFACE}=\\"inet ${HOST_IP} netmask ${NETMASK}\\"
+defaultrouter=\\"${DEFAULT_ROUTER}\\"
+
+
+\\# Uncomment if builds fail
+force_make_jobs=\\"YES\\"
+make_jobs_number=\\"${NUM_CPUS}\\"
+
+\\# We use a custom motd
+update_motd=\\"NO\\"

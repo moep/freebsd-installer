@@ -115,6 +115,8 @@ configure_boot() {
   vi /tmp/zfs/boot/loader.conf
   do_envsubst /tmp/rc.conf.in > /tmp/zfs/etc/rc.conf
   vi /tmp/zfs/etc/rc.conf
+  do_envsubst /tmp/rc.conf.local.in > /tmp/zfs/etc/rc.conf.local
+  vi /tmp/zfs/etc/rc.conf.local
 }
 
 configure_ssh() {

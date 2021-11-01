@@ -5,3 +5,4 @@
 loader.conf
 rc.conf
 */
+!conf/

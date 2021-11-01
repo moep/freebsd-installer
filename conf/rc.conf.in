@@ -1,0 +1,16 @@
+sshd_enable=\\"YES\\"
+zfs_enable=\\"YES\\"
+
+\\# Enable crash dumps 
+dumpdev=\\"AUTO\\"
+
+
+\\# CPU freq
+\\# see \\"sysctl dev.cpu.0.freq_levels\\"
+powerd_enable=\\"YES\\"
+powerd_flags=\\"-a adaptive -M $(cat /etc/cpu_max_freq)\\"
+
+\\# sysutils/uhidd
+uhidd_flags=\\"-kmohsu\\"
+uhidd_enable=\\"YES\\"
+

@@ -1,0 +1,3 @@
+zfs_load=\\"YES\\"
+vfs.root.mountfrom=\\"zfs:${ZPOOL_NAME}\\"
+vbe_max_resolution=\\"2160p\\"

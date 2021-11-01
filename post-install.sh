@@ -49,12 +49,14 @@ install_x() {
   prompt_yn "Install X11?" || return
 
   print_header "Installing X11"
-  exec_no_promt "pkg install xorg-minimal i3 i3blocks alacritty dmenu fehbg xrandr"
+  exec_no_promt "pkg install xorg-minimal i3 i3blocks alacritty dmenu dunst fehbg picom xclip xkbdmap xrandr xset"
 
   if prompt_yn "Install NVIDIA driver?"; then
     exec_no_promt "pkg install nvidia-driver nvidia-settings"
     print_info 'Adding kldload entry to rc.conf'
     echo 'kldload_nvidia="nvidia"' >> /etc/rc.conf
+    echo 'kld_list="linux nvidia-modeset"' >> /etc/rc.conf
+    # TODO dbus
     print_info 'Adding xorg setting'
     exec_no_promt "cp /root/driver-nvidia.conf /usr/local/share/X11/xorg.conf.d/driver-nvidia.conf"
   fi

@@ -1,5 +1,6 @@
 https://forums.freebsd.org/threads/installing-freebsd-manually-no-installer.63201/
 https://docs.oracle.com/cd/E19253-01/819-5461/gazss/index.html
+http://denkrobat.de/doku.php?id=freebsd_auf_usb-stick
 
 == Create bootable USB stick
 diskutil list
