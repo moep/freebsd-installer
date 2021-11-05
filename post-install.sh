@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ESSENTIAL_PKGS="bash bat curl fish fzf git glow gnuls gmake ncdu neovim ripgrep tmux ufetch "
+ESSENTIAL_PKGS="bash bat curl fish fzf git git-delta glow gnuls gmake ncdu neovim ripgrep tmux ufetch "
 DEBUG=false
 ZPOOL_NAME="zroot"
 
